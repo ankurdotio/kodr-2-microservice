@@ -95,6 +95,12 @@ export const googleAuthCallback = async function (req, res) {
 
     res.cookie("token", token)
 
+    await publishMessage("AUTHENTICATION_NOTIFICATION_USER.REGISTERED", {
+        email: user.email,
+        fullName: `${user.fullName.firstName} ${user.fullName.lastName}`,
+        username: user.username
+    })
+
     res.status(201).json({
         message: "User registered successfully via Google",
         user: {
