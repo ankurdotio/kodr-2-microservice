@@ -18,4 +18,8 @@ router.get('/google/callback',
     authController.googleAuthCallback
 );
 
+router.post("/forgot-password", authController.forgotPassword);
+
+router.post("/reset-password", validationMiddleware.resetPasswordValidationRules, authController.verifyForgotPasswordOtp);
+
 export default router;

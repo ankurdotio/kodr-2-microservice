@@ -3,6 +3,9 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import config from "../config/config.js";
 import { publishMessage } from "../broker/rabbit.js";
+import otpModel from "../models/otp.model.js";
+import axios from "axios";
+
 
 export const registerUser = async function (req, res) {
 
@@ -110,6 +113,65 @@ export const googleAuthCallback = async function (req, res) {
             fullName: user.fullName
         }
     })
+}
+
+export const forgotPassword = async function (req, res) {
+    const { email } = req.body;
+
+    const isUserExists = await userModel.findOne({ email });
+
+    if (!isUserExists) {
+        return res.status(200).json({ message: "If the email is registered, a OTP will be sent." });
+    }
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+    const otpHash = await bcrypt.hash(otp, 10);
+
+    await otpModel.create({
+        otp: otpHash,
+        email,
+        expireIn: new Date(Date.now() + 10 * 60 * 1000) // 10 minutes from now
+    })
+
+    try {
+        const token = jwt.sign({ email, otp }, config.JWT_SECRET, { expiresIn: '10m' });
+
+        const response = await axios.post("http://localhost:3001/api/notification/send-forgot-password-otp", {}, {
+            headers: { Authorization: `Bearer ${token}` }
+        })
+
+        return res.status(200).json({ message: "If the email is registered, a OTP will be sent." });
+
+    } catch (err) {
+        return res.status(500).json({ message: "Something went wrong" });
+    }
+
+}
+
+export const verifyForgotPasswordOtp = async function (req, res) {
+
+    const { email, otp, newPassword } = req.body;
+
+    const otpDoc = await otpModel.findOne({ email })
+
+    if (!otpDoc) {
+        return res.status(400).json({ message: "Invalid or expired OTP" });
+    }
+
+    const isOtpValid = await bcrypt.compare(otp, otpDoc.otp);
+
+    if (!isOtpValid) {
+        return res.status(400).json({ message: "Invalid or expired OTP" });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    await userModel.findOneAndUpdate({ email }, { password: hashedPassword });
+
+    await otpModel.findOneAndDelete({ email });
+
+    res.status(200).json({ message: "Password reset successful" });
 }
 
 

@@ -4,7 +4,8 @@ dotenvConfig();
 
 
 const _config = {
-    RABBITMQ_URI: process.env.RABBITMQ_URI
+    RABBITMQ_URI: process.env.RABBITMQ_URI,
+    JWT_SECRET: process.env.JWT_SECRET,
 }
 
 

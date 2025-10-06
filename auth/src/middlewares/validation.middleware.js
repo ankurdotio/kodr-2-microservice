@@ -29,3 +29,13 @@ export const registerValidationRules = [
 
     , validate
 ]
+
+export const resetPasswordValidationRules = [
+    body('email')
+        .isEmail().withMessage('Please provide a valid email address'),
+    body('otp')
+        .isLength({ min: 6, max: 6 }).withMessage('OTP must be 6 characters long'),
+    body('newPassword')
+        .isLength({ min: 6 }).withMessage('New password must be at least 6 characters long')
+    , validate
+]
