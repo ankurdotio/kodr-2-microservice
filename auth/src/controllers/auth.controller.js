@@ -9,7 +9,7 @@ import axios from "axios";
 
 export const registerUser = async function (req, res) {
 
-    const { username, email, fullName: { firstName, lastName }, password } = req.body;
+    const { username, email, fullName: { firstName, lastName }, password, role = "user" } = req.body;
 
     const isUserAlreadyExists = await userModel.findOne({ $or: [ { username }, { email } ] });
 
@@ -27,11 +27,14 @@ export const registerUser = async function (req, res) {
         fullName: {
             firstName,
             lastName
-        }
+        },
+        role
     })
 
     const token = jwt.sign({
         id: user._id,
+        role: user.role,
+        fullName: user.fullName,
     }, config.JWT_SECRET, { expiresIn: "2d" })
 
     res.cookie("token", token)
@@ -54,7 +57,6 @@ export const registerUser = async function (req, res) {
 
 }
 
-
 export const googleAuthCallback = async function (req, res) {
 
     const { id, emails: [ email ], name: { givenName: firstName, familyName: lastName } } = req.user;
@@ -68,6 +70,8 @@ export const googleAuthCallback = async function (req, res) {
     if (isUserAlreadyExists) {
         const token = jwt.sign({
             id: isUserAlreadyExists._id,
+            role: isUserAlreadyExists.role,
+            fullName: isUserAlreadyExists.fullName,
         }, config.JWT_SECRET, { expiresIn: "2d" })
 
         res.cookie("token", token)
@@ -94,6 +98,8 @@ export const googleAuthCallback = async function (req, res) {
 
     const token = jwt.sign({
         id: user._id,
+        role: user.role,
+        fullName: user.fullName,
     }, config.JWT_SECRET, { expiresIn: "2d" })
 
     res.cookie("token", token)

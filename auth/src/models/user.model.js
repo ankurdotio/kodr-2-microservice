@@ -10,7 +10,6 @@ const userSchema = new mongoose.Schema({
         minlength: [ 3, "Username must be at least 3 characters long" ],
         maxlength: [ 30, "Username must be at most 30 characters long" ]
     },
-
     email: {
         type: String,
         required: [ true, "Email is required" ],
@@ -41,6 +40,11 @@ const userSchema = new mongoose.Schema({
         required: function () {
             return !this.googleId;
         }
+    },
+    role: {
+        type: String,
+        enum: [ "user", "artist" ],
+        default: "user"
     }
 })
 
